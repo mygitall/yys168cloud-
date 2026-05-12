@@ -27,7 +27,8 @@ try {
     $row = $stmt->fetch();
 
     if (!$row) {
-        header('Location: /');
+        $shareCancelled = true;
+        require __DIR__ . '/share.php';
         exit;
     }
 

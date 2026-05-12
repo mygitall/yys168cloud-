@@ -174,7 +174,14 @@ if ($file && empty($file['links']) && $dlToken) {
 <body>
 
 <div class="card">
-    <?php if ($error): ?>
+    <?php if (isset($shareCancelled) && $shareCancelled): ?>
+        <div class="error-box" style="color:#888;">
+            <p style="font-size:48px;margin-bottom:12px;">🚫</p>
+            <p style="font-size:15px;font-weight:500;">此文件已被取消分享</p>
+            <p style="margin-top:8px;font-size:12px;color:#999;">该分享链接已失效，请联系分享者重新获取</p>
+        </div>
+
+    <?php elseif ($error): ?>
         <div class="error-box">
             <p style="font-size:36px;margin-bottom:12px;">😞</p>
             <p><?php echo htmlspecialchars($error); ?></p>
