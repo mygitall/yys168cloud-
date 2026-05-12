@@ -284,6 +284,16 @@ $csrfToken = isset($_SESSION['csrf_token']) ? $_SESSION['csrf_token'] : '';
             padding: 2px 8px;
         }
 
+        .btn-outline {
+            background: transparent;
+            color: #4a7ab5;
+            border: 1px solid #4a7ab5;
+        }
+
+        .btn-outline:hover {
+            background: #e8f0fe;
+        }
+
         .table-wrap {
             overflow-x: auto;
         }
@@ -573,6 +583,45 @@ $csrfToken = isset($_SESSION['csrf_token']) ? $_SESSION['csrf_token'] : '';
         }
 
         .auth-error.show { display: block; }
+
+        /* 目录密码管理 */
+        .dir-pw-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e8e8e0;
+            gap: 10px;
+        }
+
+        .dir-pw-item:last-child {
+            border-bottom: none;
+        }
+
+        .dir-pw-name {
+            flex: 1;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .dir-pw-item input[type="password"] {
+            width: 160px;
+            padding: 5px 8px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+
+        .dir-pw-item .btn {
+            font-size: 11px;
+            padding: 4px 10px;
+        }
+
+        .dir-pw-empty {
+            text-align: center;
+            color: #888;
+            padding: 20px;
+            font-size: 13px;
+        }
 
         /* Toast */
         .toast {
@@ -868,6 +917,9 @@ $csrfToken = isset($_SESSION['csrf_token']) ? $_SESSION['csrf_token'] : '';
         <button class="tab-nav-item" data-tab="auth" role="tab" aria-selected="false">
             <span>🔒</span> 修改密码
         </button>
+        <button class="tab-nav-item" data-tab="shares" role="tab" aria-selected="false">
+            <span>🔗</span> 分享列表
+        </button>
     </nav>
 
     <div class="container">
@@ -1030,6 +1082,33 @@ $csrfToken = isset($_SESSION['csrf_token']) ? $_SESSION['csrf_token'] : '';
                     <div class="auth-error" id="auth-error"></div>
                     <div class="auth-success" id="auth-success"></div>
                     <button class="btn btn-primary" style="margin-top:8px" onclick="changePassword()">保存修改</button>
+                </div>
+            </div>
+
+            <!-- 前台目录密码管理 -->
+            <div class="section-card" style="margin-top:20px;">
+                <div class="section-card-header">
+                    <h2>🔒 目录密码管理</h2>
+                    <span style="font-size:12px;color:#888;">管理前台已加密目录的密码，遗忘时可在此重置</span>
+                </div>
+                <div class="modal-body">
+                    <div id="dir-password-list">加载中...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: 分享列表 -->
+        <div class="tab-content" id="tab-shares" data-tab="shares">
+            <div class="section-card">
+                <div class="section-card-header">
+                    <h2>🔗 分享列表</h2>
+                    <span style="font-size:12px;color:#888;">所有已生成的文件分享短链接</span>
+                </div>
+                <div class="table-wrap" id="share-list-table" style="max-height:60vh;overflow:auto;">
+                    <table>
+                        <thead><tr><th>文件名称</th><th>来源目录</th><th>短链接</th><th>访问</th><th>下载</th><th>创建时间</th><th>操作</th></tr></thead>
+                        <tbody id="share-list-body"><tr><td colspan="7" style="text-align:center;color:#999;">加载中...</td></tr></tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -1286,6 +1365,98 @@ function changePassword() {
             errEl.className = 'auth-error show';
         }
     });
+}
+
+// ---- 目录密码管理 ----
+function loadDirPasswords() {
+    var container = document.getElementById('dir-password-list');
+    fetch(apiBase + '?type=dirs', { method: 'GET', credentials: 'same-origin' })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (!d.success) { container.innerHTML = '<div class="dir-pw-empty">加载失败</div>'; return; }
+            var lockedDirs = (d.data || []).filter(function(dir) { return dir.has_password; });
+            if (lockedDirs.length === 0) {
+                container.innerHTML = '<div class="dir-pw-empty">当前没有加密目录</div>';
+                return;
+            }
+            var html = '';
+            lockedDirs.forEach(function(dir) {
+                html += '<div class="dir-pw-item">' +
+                    '<span class="dir-pw-name">🔒 ' + escHtml(dir.name) + '</span>' +
+                    '<input type="password" id="dir-pw-' + dir.id + '" placeholder="新密码（留空=取消）">' +
+                    '<button class="btn btn-primary" onclick="resetDirPassword(' + dir.id + ')">重置</button>' +
+                '</div>';
+            });
+            container.innerHTML = html;
+        });
+}
+
+function resetDirPassword(dirId) {
+    var pw = document.getElementById('dir-pw-' + dirId).value;
+    fetch(apiBase + '?action=dir_lock', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        credentials: 'same-origin',
+        body: JSON.stringify({dir_id: dirId, password: pw})
+    }).then(function(r) { return r.json(); })
+    .then(function(d) {
+        if (d.success) {
+            toast(pw ? '密码已更新' : '密码已取消');
+            loadDirPasswords();
+        } else {
+            toast('操作失败: ' + (d.error || ''));
+        }
+    });
+}
+
+// 切换到 auth tab 时加载目录密码，切换到 shares tab 时加载分享列表
+var _origSwitchTab2 = switchTab;
+switchTab = function(tabId) {
+    _origSwitchTab2(tabId);
+    if (tabId === 'auth') loadDirPasswords();
+    if (tabId === 'shares') loadShareList();
+};
+
+// ---- 分享列表 ----
+function loadShareList() {
+    var tbody = document.getElementById('share-list-body');
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#999;">加载中...</td></tr>';
+    fetch(apiBase + '?action=share_list', { method: 'GET', credentials: 'same-origin' })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (!d.success || !d.data) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#999;">加载失败</td></tr>'; return; }
+            if (d.data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#999;padding:30px;">暂无分享记录</td></tr>';
+                return;
+            }
+            var html = '';
+            d.data.forEach(function(item) {
+                var shortUrl = location.origin + '/' + item.code;
+                html += '<tr>' +
+                    '<td class="td-name">📄 ' + escHtml(item.file_name) + '</td>' +
+                    '<td>' + escHtml(item.dir_name || '-') + '</td>' +
+                    '<td><a href="' + escHtml(shortUrl) + '" target="_blank" style="color:#4a7ab5;font-size:12px;">/' + escHtml(item.code) + '</a></td>' +
+                    '<td style="text-align:center;">' + (parseInt(item.visit_count) || 0) + '</td>' +
+                    '<td style="text-align:center;">' + (parseInt(item.download_count) || 0) + '</td>' +
+                    '<td style="font-size:12px;color:#888;">' + (item.created_at || '-') + '</td>' +
+                    '<td><button class="btn btn-sm btn-outline" onclick="copyShareCode(\'' + item.code + '\')">复制链接</button></td>' +
+                '</tr>';
+            });
+            tbody.innerHTML = html;
+        });
+}
+
+function copyShareCode(code) {
+    var url = location.origin + '/' + code;
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(function() { toast('已复制'); });
+    } else {
+        var ta = document.createElement('textarea');
+        ta.value = url; ta.style.position = 'fixed'; ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+        toast('已复制');
+    }
 }
 
 // ---- Directories ----

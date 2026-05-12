@@ -153,7 +153,7 @@ function requireCsrf() {
 // ===================== CSRF PROTECTION =====================
 // State-changing methods require a valid CSRF token (except login/logout/check)
 if (in_array($method, ['POST', 'PUT', 'DELETE'])) {
-    $exemptActions = ['login', 'logout', 'check'];
+    $exemptActions = ['login', 'logout', 'check', 'dir_unlock', 'share_create', 'share_download'];
     $csrfAction = isset($_GET['action']) ? $_GET['action'] : (isset($_GET['db_action']) ? $_GET['db_action'] : '');
     if (!in_array($csrfAction, $exemptActions)) {
         requireCsrf();
@@ -265,6 +265,91 @@ if ($method === 'POST' && isset($_GET['db_action'])) {
 
 // GET: fetch data
 if ($method === 'GET') {
+    // GET: file download — 根据文件名在 uploads 中匹配并下载
+    if (isset($_GET['action']) && $_GET['action'] === 'file_download') {
+        // 分享页防盗链：通过 share code + dl_token 获取文件信息
+        $shareCode = isset($_GET['share']) ? $_GET['share'] : '';
+        $dlToken = isset($_GET['dl']) ? $_GET['dl'] : '';
+        if (!empty($shareCode) && !empty($dlToken)) {
+            $db = createDb();
+            $stmt = $db->prepare("SELECT dir_id, file_name FROM share_links WHERE code = ? AND dl_token = ?");
+            $stmt->execute([$shareCode, $dlToken]);
+            $shareRow = $stmt->fetch();
+            if (!$shareRow) {
+                json(['success' => false, 'error' => '链接无效或已过期，请重新访问分享页面']);
+            }
+            $dirId = intval($shareRow['dir_id']);
+            $fileName = $shareRow['file_name'];
+        } else {
+            $dirId = intval(isset($_GET['dir_id']) ? $_GET['dir_id'] : 0);
+            $fileName = isset($_GET['file_name']) ? urldecode($_GET['file_name']) : '';
+        }
+
+        if ($dirId <= 0 || empty($fileName)) {
+            json(['success' => false, 'error' => '参数错误']);
+        }
+        // 去掉 📄 前缀，提取基本名和扩展名
+        $cleanName = preg_replace('/^📄\s*/u', '', $fileName);
+        $baseName = pathinfo($cleanName, PATHINFO_FILENAME);
+        $ext = strtolower(pathinfo($cleanName, PATHINFO_EXTENSION));
+
+        // 在 uploads 中匹配: baseName_YYYYMMDD_uniqid.ext
+        $uploadDir = __DIR__ . '/../uploads/';
+        $found = null;
+        if (is_dir($uploadDir)) {
+            $files = scandir($uploadDir);
+            foreach ($files as $f) {
+                if ($f === '.' || $f === '..' || $f === '.htaccess') continue;
+                $pattern = '/^' . preg_quote($baseName, '/') . '_\d{8}_[a-f0-9]+\.' . preg_quote($ext, '/') . '$/i';
+                if (preg_match($pattern, $f)) {
+                    $found = $uploadDir . $f;
+                    break;
+                }
+            }
+        }
+        if (!$found) {
+            json(['success' => false, 'error' => '文件不存在']);
+        }
+
+        // 防盗链：分享页请求记录下载次数
+        if (!empty($shareCode)) {
+            try {
+                $db = isset($db) ? $db : createDb();
+                $db->prepare("UPDATE share_links SET download_count = download_count + 1 WHERE code = ?")->execute([$shareCode]);
+            } catch (Exception $e) {}
+        }
+
+        $mimeMap = [
+            'pdf' => 'application/pdf', 'png' => 'image/png', 'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg', 'gif' => 'image/gif', 'webp' => 'image/webp',
+            'zip' => 'application/zip', '7z' => 'application/x-7z-compressed',
+            'txt' => 'text/plain', 'doc' => 'application/msword',
+            'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'xls' => 'application/vnd.ms-excel',
+            'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'mp3' => 'audio/mpeg', 'mp4' => 'video/mp4', 'webm' => 'video/webm',
+        ];
+        $mime = isset($mimeMap[$ext]) ? $mimeMap[$ext] : 'application/octet-stream';
+        header('Content-Type: ' . $mime);
+        $inline = isset($_GET['inline']) && $_GET['inline'] === '1';
+        header('Content-Disposition: ' . ($inline ? 'inline' : 'attachment') . '; filename="' . $cleanName . '"');
+        header('Content-Length: ' . filesize($found));
+        // 预览模式下允许 iframe 嵌入
+        if ($inline) {
+            header('X-Frame-Options: SAMEORIGIN');
+        }
+        readfile($found);
+        exit;
+    }
+
+    // GET: share list (admin)
+    if (isset($_GET['action']) && $_GET['action'] === 'share_list') {
+        if (!isLoggedIn()) json(['success' => false, 'error' => '请先登录', 'unauthorized' => true]);
+        $db = createDb();
+        $stmt = $db->query("SELECT sl.code, sl.dir_id, sl.file_name, sl.visit_count, sl.download_count, sl.created_at, d.name AS dir_name FROM share_links sl LEFT JOIN directories d ON d.id = sl.dir_id ORDER BY sl.id DESC");
+        json(['success' => true, 'data' => $stmt->fetchAll()]);
+    }
+
     // GET: backup list
     if (isset($_GET['action']) && $_GET['action'] === 'db_backup_list') {
         if (!isLoggedIn()) json(['success' => false, 'error' => '请先登录', 'unauthorized' => true]);
@@ -297,6 +382,8 @@ if ($method === 'GET') {
                 $dirs = $stmt->fetchAll();
                 foreach ($dirs as &$d) {
                     $d['files'] = normalizeFileLinks(json_decode(isset($d['files']) ? $d['files'] : '[]', true) ?: []);
+                    $d['has_password'] = !empty($d['password_hash']);
+                    unset($d['password_hash']);
                 }
                 json(['success' => true, 'data' => $dirs]);
                 break;
@@ -346,6 +433,8 @@ if ($method === 'GET') {
     $dirs = $stmt->fetchAll();
     foreach ($dirs as &$d) {
         $d['files'] = normalizeFileLinks(json_decode(isset($d['files']) ? $d['files'] : '[]', true) ?: []);
+        $d['has_password'] = !empty($d['password_hash']);
+        unset($d['password_hash']);
     }
     $msgStmt = $db->query("SELECT * FROM messages ORDER BY id DESC");
     json(['success' => true, 'dirs' => $dirs, 'messages' => $msgStmt->fetchAll()]);
@@ -815,6 +904,76 @@ if ($method === 'POST') {
         } catch (Exception $e) {
             json(['success' => false, 'error' => '恢复失败: ' . $e->getMessage()]);
         }
+    }
+
+    if ($action === 'dir_lock') {
+        if (!isLoggedIn()) json(['success' => false, 'error' => '请先登录', 'unauthorized' => true]);
+        $db = createDb();
+        $dirId = intval(isset($input['dir_id']) ? $input['dir_id'] : 0);
+        $password = isset($input['password']) ? $input['password'] : '';
+
+        if ($dirId <= 0) json(['success' => false, 'error' => '参数错误']);
+
+        if (empty($password)) {
+            $db->prepare("UPDATE directories SET password_hash = NULL WHERE id = ?")->execute([$dirId]);
+        } else {
+            $hash = compat_password_hash($password);
+            $db->prepare("UPDATE directories SET password_hash = ? WHERE id = ?")->execute([$hash, $dirId]);
+        }
+        json(['success' => true]);
+    }
+
+    if ($action === 'dir_unlock') {
+        $db = createDb();
+        $dirId = intval(isset($input['dir_id']) ? $input['dir_id'] : 0);
+        $password = isset($input['password']) ? $input['password'] : '';
+
+        if ($dirId <= 0 || empty($password)) json(['success' => false, 'error' => '参数错误']);
+
+        $stmt = $db->prepare("SELECT password_hash FROM directories WHERE id = ?");
+        $stmt->execute([$dirId]);
+        $row = $stmt->fetch();
+
+        if (!$row || empty($row['password_hash'])) {
+            json(['success' => true]);
+        }
+
+        if (!password_verify($password, $row['password_hash'])) {
+            json(['success' => false, 'error' => '密码错误']);
+        }
+
+        json(['success' => true]);
+    }
+
+    if ($action === 'share_create') {
+        $db = createDb();
+        $dirId = intval(isset($input['dir_id']) ? $input['dir_id'] : 0);
+        $fileName = isset($input['file_name']) ? $input['file_name'] : '';
+
+        if ($dirId <= 0 || empty($fileName)) json(['success' => false, 'error' => '参数错误']);
+
+        // 生成唯一 8 位小写字母 code
+        $maxRetries = 20;
+        $code = '';
+        for ($i = 0; $i < $maxRetries; $i++) {
+            $code = substr(str_shuffle('abcdefghijklmnopqrstuvwxyz'), 0, 8);
+            $check = $db->prepare("SELECT id FROM share_links WHERE code = ?");
+            $check->execute([$code]);
+            if (!$check->fetch()) break;
+            if ($i === $maxRetries - 1) json(['success' => false, 'error' => '生成短链接失败，请重试']);
+        }
+
+        $db->prepare("INSERT INTO share_links (code, dir_id, file_name) VALUES (?, ?, ?)")->execute([$code, $dirId, $fileName]);
+        json(['success' => true, 'code' => $code]);
+    }
+
+    if ($action === 'share_download') {
+        $db = createDb();
+        $code = isset($input['code']) ? $input['code'] : '';
+        if (!empty($code) && preg_match('/^[a-z]{8}$/', $code)) {
+            $db->prepare("UPDATE share_links SET download_count = download_count + 1 WHERE code = ?")->execute([$code]);
+        }
+        json(['success' => true]);
     }
 
     json(['success' => false, 'error' => '未知的操作']);

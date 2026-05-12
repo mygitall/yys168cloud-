@@ -56,37 +56,10 @@ if (!is_dir($uploadDir)) {
     mkdir($uploadDir, 0755, true);
 }
 
-// 允许的文件类型
-$allowedTypes = [
-    'image/jpeg' => 'jpg',
-    'image/png' => 'png',
-    'image/gif' => 'gif',
-    'image/webp' => 'webp',
-    'application/pdf' => 'pdf',
-    'application/zip' => 'zip',
-    'application/x-rar-compressed' => 'rar',
-    'application/x-7z-compressed' => '7z',
-    'text/plain' => 'txt',
-    'application/msword' => 'doc',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
-    'application/vnd.ms-excel' => 'xls',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'xlsx',
-    'application/vnd.ms-powerpoint' => 'ppt',
-    'application/vnd.openxmlformats-officedocument.presentationml.presentation' => 'pptx',
-    'audio/mpeg' => 'mp3',
-    'audio/wav' => 'wav',
-    'audio/ogg' => 'ogg',
-    'video/mp4' => 'mp4',
-    'video/webm' => 'webm',
-    'video/x-msvideo' => 'avi',
-    'application/octet-stream' => 'bin', // 其他二进制文件
-    'text/x-php' => 'php',
-    'application/x-php' => 'php',
-    'application/x-httpd-php' => 'php',
-];
+// 允许任意文件类型上传，扩展名取原始文件扩展名
 
-// 最大文件大小 50MB
-$maxFileSize = 50 * 1024 * 1024;
+// 最大文件大小 1024MB（1GB）
+$maxFileSize = 1024 * 1024 * 1024;
 
 // 检查请求方法
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -119,35 +92,17 @@ if ($file['error'] !== UPLOAD_ERR_OK) {
 
 // 检查文件大小
 if ($file['size'] > $maxFileSize) {
-    echo json_encode(['success' => false, 'error' => '文件大小超过50MB限制'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['success' => false, 'error' => '文件大小超过1024MB限制'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
-// 获取文件类型
-$fileType = $file['type'];
+// 从原始文件名获取扩展名
+$ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 
-// 对于某些浏览器可能发送不准确的MIME类型，进行额外检查
-$finfo = finfo_open(FILEINFO_MIME_TYPE);
-$realType = finfo_file($finfo, $file['tmp_name']);
-finfo_close($finfo);
-
-if ($realType && $realType !== 'application/octet-stream') {
-    $fileType = $realType;
+// 兜底：无扩展名时用 bin
+if (empty($ext)) {
+    $ext = 'bin';
 }
-
-// 检查文件类型
-if (!isset($allowedTypes[$fileType]) && !in_array($fileType, $allowedTypes)) {
-    // 尝试根据扩展名判断
-    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-    $reverseAllowed = array_flip($allowedTypes);
-    if (!isset($reverseAllowed[$ext])) {
-        echo json_encode(['success' => false, 'error' => '不支持的文件类型: ' . $fileType], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
-}
-
-// 获取扩展名
-$ext = isset($allowedTypes[$fileType]) ? $allowedTypes[$fileType] : strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 
 // 生成安全的文件名
 $originalName = pathinfo($file['name'], PATHINFO_FILENAME);

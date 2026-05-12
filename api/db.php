@@ -69,6 +69,8 @@ function createDb() {
     migrateMessagesTable($db);
     migrateDirectoriesTable($db);
     migrateDirectoriesPinColumn($db);
+    migrateDirectoriesPasswordColumn($db);
+    migrateShareLinksTable($db);
     return $db;
 }
 
@@ -107,6 +109,39 @@ function migrateDirectoriesPinColumn($db) {
     } catch (PDOException $e) {
         // 列或索引已存在则忽略
     }
+}
+
+function migrateDirectoriesPasswordColumn($db) {
+    try {
+        $db->exec("ALTER TABLE `directories` ADD COLUMN `password_hash` VARCHAR(255) DEFAULT NULL");
+    } catch (PDOException $e) {
+        // 列已存在则忽略
+    }
+}
+
+function migrateShareLinksTable($db) {
+    try {
+        $db->exec("CREATE TABLE IF NOT EXISTS `share_links` (
+          `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+          `code` VARCHAR(8) NOT NULL,
+          `dir_id` BIGINT UNSIGNED NOT NULL,
+          `file_name` VARCHAR(500) NOT NULL,
+          `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `uk_code` (`code`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    } catch (PDOException $e) {
+        // 表已存在则忽略
+    }
+    try {
+        $db->exec("ALTER TABLE `share_links` ADD COLUMN `visit_count` BIGINT UNSIGNED NOT NULL DEFAULT 0");
+    } catch (PDOException $e) {}
+    try {
+        $db->exec("ALTER TABLE `share_links` ADD COLUMN `download_count` BIGINT UNSIGNED NOT NULL DEFAULT 0");
+    } catch (PDOException $e) {}
+    try {
+        $db->exec("ALTER TABLE `share_links` ADD COLUMN `dl_token` VARCHAR(64) DEFAULT NULL");
+    } catch (PDOException $e) {}
 }
 
 /**
@@ -199,6 +234,18 @@ function getCreateTableSQL($type = null) {
           `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
           PRIMARY KEY (`id`),
           UNIQUE KEY `uk_auth_id` (`id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+
+        "CREATE TABLE IF NOT EXISTS `share_links` (
+          `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+          `code` VARCHAR(8) NOT NULL,
+          `dir_id` BIGINT UNSIGNED NOT NULL,
+          `file_name` VARCHAR(500) NOT NULL,
+          `visit_count` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+          `download_count` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+          `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `uk_code` (`code`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 
         "CREATE TABLE IF NOT EXISTS `login_attempts` (

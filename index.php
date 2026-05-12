@@ -292,6 +292,12 @@ if (!file_exists(__DIR__ . '/install.lock')) {
             color: #d44;
         }
 
+        .dir-lock-icon {
+            font-size: 11px;
+            margin-left: 4px;
+            opacity: 0.7;
+        }
+
         .dir-pager {
             display: flex;
             align-items: center;
@@ -419,6 +425,34 @@ if (!file_exists(__DIR__ . '/install.lock')) {
 
         .submenu-item .file-name {
             flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .file-download-icon {
+            flex-shrink: 0;
+            margin-left: auto;
+            width: 22px;
+            height: 22px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+            border-radius: 4px;
+            color: #555;
+            text-decoration: none;
+        }
+
+        .file-download-icon:hover {
+            background: #e8e8e0;
+            opacity: 1;
+        }
+
+        .submenu-item:hover .file-download-icon {
+            opacity: 0.45;
         }
 
         .submenu-item .file-actions {
@@ -457,85 +491,6 @@ if (!file_exists(__DIR__ . '/install.lock')) {
         .submenu-item .file-actions .file-del:hover {
             background-color: #ffe6e6;
             border-color: #d00;
-        }
-
-        .file-download-wrap {
-            position: relative;
-            align-items: center;
-            flex-shrink: 0;
-            display: none;
-        }
-
-        .submenu-item:hover .file-download-wrap {
-            display: inline-flex;
-        }
-
-        .file-download-wrap:hover .download-popup {
-            display: flex !important;
-        }
-
-        .file-download-btn {
-            font-size: 8px;
-            padding: 1px 5px;
-            border-radius: 2px;
-            border: 1px solid #ccc;
-            background: #f5f5f0;
-            cursor: pointer;
-            font-family: inherit;
-            margin-left: 10px;
-            text-decoration: none;
-            color: #333;
-            line-height: normal;
-        }
-
-        .file-download-btn:hover {
-            background-color: #e0e0d8;
-            color: #333;
-        }
-
-        .download-link-popup {
-            display: none;
-            position: absolute;
-            left: 0;
-            top: 100%;
-            transform: translateY(4px);
-            background: #d32f2f;
-            border: 1px solid #b71c1c;
-            border-radius: 6px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.25);
-            padding: 4px 0;
-            z-index: 1000;
-            min-width: 200px;
-            flex-direction: column;
-        }
-
-        .download-link-popup.show {
-            display: flex;
-            pointer-events: auto;
-        }
-
-        .download-link-popup-item {
-            padding: 8px 14px;
-            font-size: 12px;
-            color: #fff;
-            background-color: #d32f2f;
-            cursor: pointer;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            transition: background-color 0.15s;
-        }
-
-        .download-link-popup-item:first-child {
-            border-radius: 6px 6px 0 0;
-        }
-
-        .download-link-popup-item:last-child {
-            border-radius: 0 0 6px 6px;
-        }
-
-        .download-link-popup-item:hover {
-            background-color: #b71c1c;
         }
 
         .dir-icon {
@@ -1066,6 +1021,314 @@ if (!file_exists(__DIR__ . '/install.lock')) {
             background-color: #a02020;
         }
 
+        /* 预览弹窗 */
+        .preview-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 180px;
+            max-height: 72vh;
+            overflow: auto;
+            background: #f5f5f0;
+            border-radius: 6px;
+        }
+
+        .preview-content img {
+            max-width: 100%;
+            max-height: 70vh;
+            object-fit: contain;
+            display: block;
+        }
+
+        .preview-content embed,
+        .preview-content iframe {
+            width: 100%;
+            height: 70vh;
+            border: none;
+        }
+
+        .preview-content video {
+            max-width: 100%;
+            max-height: 70vh;
+            display: block;
+        }
+
+        .preview-content pre {
+            width: 100%;
+            align-self: flex-start;
+        }
+
+        /* 音频播放器 */
+        .audio-player {
+            width: 100%;
+            padding: 28px 24px 20px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .audio-player-icon {
+            width: 56px;
+            height: 56px;
+            margin: 0 auto 12px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .audio-player-title {
+            color: #e0e0e0;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 20px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding: 0 4px;
+        }
+
+        .audio-player-controls {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .ap-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.15s;
+            flex-shrink: 0;
+            color: #fff;
+        }
+
+        .ap-btn-play {
+            background: #4a9eff;
+            width: 46px;
+            height: 46px;
+            font-size: 16px;
+        }
+
+        .ap-btn-play:hover { background: #3a8eef; }
+
+        .ap-btn-stop {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .ap-btn-stop:hover { background: rgba(255,255,255,0.2); }
+
+        .ap-progress-wrap {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .ap-range {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 5px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 3px;
+            outline: none;
+            cursor: pointer;
+            accent-color: #4a9eff;
+        }
+
+        .ap-range::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+            border: none;
+            cursor: pointer;
+            margin-top: -1px;
+        }
+
+        .ap-range::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+            border: none;
+            cursor: pointer;
+        }
+
+        .ap-range::-webkit-slider-runnable-track {
+            height: 5px;
+            border-radius: 3px;
+        }
+
+        .ap-range::-moz-range-track {
+            height: 5px;
+            border-radius: 3px;
+            background: rgba(255,255,255,0.15);
+        }
+
+        .ap-range::-moz-range-progress {
+            height: 5px;
+            border-radius: 3px;
+            background: #4a9eff;
+        }
+
+        .ap-time {
+            color: rgba(255,255,255,0.6);
+            font-size: 12px;
+            font-family: Menlo, Monaco, Consolas, monospace;
+            flex-shrink: 0;
+            min-width: 88px;
+            text-align: right;
+        }
+
+        .ap-audio {
+            display: none;
+        }
+
+        /* 压缩包文件列表 */
+        .zip-file-list {
+            width: 100%;
+            max-height: 60vh;
+            overflow: auto;
+            text-align: left;
+            font-size: 13px;
+        }
+
+        .zip-file-item {
+            display: flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-bottom: 1px solid #e8e8e0;
+            font-family: Menlo, Monaco, Consolas, monospace;
+            font-size: 12px;
+            color: #333;
+            cursor: default;
+        }
+
+        .zip-file-item.is-dir {
+            color: #4a7ab5;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .zip-file-item.is-dir:hover {
+            background: #e8f0fe;
+        }
+
+        .zip-file-back {
+            cursor: pointer;
+            color: #888;
+            font-weight: 500;
+        }
+
+        .zip-file-back:hover {
+            background: #f0f0ee;
+            color: #333;
+        }
+
+        .zip-breadcrumb {
+            display: flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-bottom: 1px solid #e0e0d8;
+            font-size: 12px;
+            color: #888;
+            gap: 4px;
+            overflow: hidden;
+        }
+
+        .zip-breadcrumb span {
+            cursor: pointer;
+            color: #4a7ab5;
+            white-space: nowrap;
+        }
+
+        .zip-breadcrumb span:hover {
+            text-decoration: underline;
+        }
+
+        .zip-breadcrumb .zip-breadcrumb-sep {
+            color: #ccc;
+            cursor: default;
+        }
+
+        .zip-breadcrumb .zip-breadcrumb-sep:hover {
+            text-decoration: none;
+        }
+
+        .zip-file-item .zip-file-icon {
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+
+        .zip-file-item .zip-file-name {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .zip-file-item .zip-file-size {
+            margin-left: 12px;
+            color: #999;
+            flex-shrink: 0;
+            font-size: 11px;
+        }
+
+        .zip-file-count {
+            text-align: center;
+            padding: 8px;
+            color: #888;
+            font-size: 12px;
+            border-bottom: 1px solid #e0e0d8;
+        }
+
+        .preview-unsupported {
+            text-align: center;
+            padding: 50px 30px;
+            color: #888;
+            font-size: 13px;
+        }
+
+        .preview-unsupported .preview-download-btn {
+            display: inline-block;
+            margin-top: 16px;
+            padding: 6px 18px;
+            background: #4a7ab5;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        .preview-unsupported .preview-download-btn:hover {
+            background: #3a6aa5;
+        }
+
+        .file-name-text {
+            cursor: pointer;
+        }
+
+        .file-name-text:hover {
+            color: #4a7ab5;
+            text-decoration: underline;
+        }
+
         /* 文件上传样式 */
         .upload-area {
             border: 2px dashed #ccc;
@@ -1228,6 +1491,7 @@ if (!file_exists(__DIR__ . '/install.lock')) {
             to { transform: rotate(360deg); }
         }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
 
@@ -1313,7 +1577,7 @@ if (!file_exists(__DIR__ . '/install.lock')) {
                     <div class="upload-icon">📤</div>
                     <div class="upload-text" id="upload-text">
                         点击选择文件或拖拽文件到此处上传
-                        <small>支持常见文件格式，单个文件不超过50MB</small>
+                        <small>支持常见文件格式，单个文件不超过1024MB</small>
                     </div>
                     <input type="file" id="file-upload-input" onchange="handleFileSelect(event)">
                     <div class="upload-progress" id="upload-progress">
@@ -1370,6 +1634,52 @@ if (!file_exists(__DIR__ . '/install.lock')) {
         </div>
     </div>
 
+    <!-- Dir lock modal (admin) -->
+    <div class="modal-overlay" id="dir-lock-modal">
+        <div class="modal" style="max-width:360px;">
+            <h3 id="dir-lock-title">设置密码</h3>
+            <div class="form-group">
+                <label>密码（留空则取消密码）</label>
+                <input type="password" id="dir-lock-password" placeholder="输入密码">
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-secondary" onclick="closeDirLockModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveDirLock()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dir unlock modal (anonymous) -->
+    <div class="modal-overlay" id="dir-unlock-modal">
+        <div class="modal" style="max-width:340px;">
+            <h3 id="dir-unlock-title">🔒 此目录已加密</h3>
+            <p style="font-size:12px;color:#888;margin-bottom:12px;">请输入密码访问</p>
+            <div class="form-group">
+                <input type="password" id="dir-unlock-password" placeholder="输入密码" onkeydown="if(event.key==='Enter')submitDirUnlock()">
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-secondary" onclick="closeDirUnlockModal()">取消</button>
+                <button class="btn btn-primary" onclick="submitDirUnlock()">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Share dir modal -->
+    <div class="modal-overlay" id="share-modal">
+        <div class="modal" style="max-width:420px;">
+            <h3 style="margin-bottom:8px;">🔗 分享目录</h3>
+            <p id="share-dir-name" style="font-size:12px;color:#888;margin-bottom:12px;"></p>
+            <div style="display:flex;gap:8px;">
+                <input type="text" id="share-url" readonly style="flex:1;padding:8px;border:1px solid #ccc;border-radius:4px;font-size:12px;background:#f5f5f0;" onclick="this.select()">
+                <button class="btn btn-primary" onclick="copyShareUrl()" style="white-space:nowrap;">复制</button>
+            </div>
+            <p id="share-copied" style="font-size:12px;color:#4a9eff;margin-top:8px;display:none;">已复制到剪贴板</p>
+            <div class="form-actions" style="margin-top:12px;">
+                <button class="btn btn-secondary" onclick="closeShareModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Download choice modal -->
     <div class="modal-overlay" id="download-modal" style="align-items:flex-start;">
         <div class="modal" style="min-width:280px;max-width:400px;margin-top:120px;">
@@ -1377,6 +1687,17 @@ if (!file_exists(__DIR__ . '/install.lock')) {
             <div id="download-links-container" style="max-height:400px;overflow-y:auto;"></div>
             <div class="form-actions" style="margin-top:12px;">
                 <button class="btn btn-secondary" onclick="closeDownloadModal()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 预览弹窗 -->
+    <div class="modal-overlay" id="preview-modal" style="align-items:flex-start;">
+        <div class="modal" style="min-width:360px;max-width:92vw;width:800px;margin-top:50px;">
+            <h3 style="margin-bottom:12px;" id="preview-title">📄 预览</h3>
+            <div id="preview-content" class="preview-content"></div>
+            <div class="form-actions" style="margin-top:12px;">
+                <button class="btn btn-secondary" onclick="closePreviewModal()">关闭</button>
             </div>
         </div>
     </div>
@@ -1646,6 +1967,8 @@ function createDirItemEl(dir) {
     const div = document.createElement('div');
     div.className = 'dir-item';
     div.dataset.dir = dir.name;
+    div.dataset.dirId = dir.id;
+    div.dataset.locked = dir.has_password ? '1' : '0';
     div.innerHTML =
         '<span class="dir-icon">' +
             '<svg viewBox="0 0 24 24" fill="#e8b830" width="16" height="16"><path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0 1.1-.9-2-2-2h-8l-2-2z"/></svg>' +
@@ -1653,10 +1976,12 @@ function createDirItemEl(dir) {
                 '<div class="icon-menu-item admin-only" onclick="openEditDirModal(' + dir.id + ', \'' + esc(dir.name) + '\', \'' + dir.type + '\')">编辑</div>' +
                 '<div class="icon-menu-item admin-only" onclick="togglePinDir(' + dir.id + ')">' + (dir.is_pinned ? '取消置顶' : '置顶') + '</div>' +
                 '<div class="icon-menu-item admin-only" onclick="reorderDir(' + dir.id + ', ' + allDirs.length + ')">移动排序</div>' +
+                '<div class="icon-menu-item" onclick="shareDir(' + dir.id + ', \'' + esc(dir.name) + '\')">🔗 分享</div>' +
+                '<div class="icon-menu-item admin-only" onclick="showDirLockModal(' + dir.id + ', \'' + esc(dir.name) + '\', ' + (dir.has_password ? 'true' : 'false') + ')">' + (dir.has_password ? '🔓 取消密码' : '🔒 设置密码') + '</div>' +
                 '<div class="icon-menu-item delete admin-only" onclick="confirmDeleteDir(' + dir.id + ', \'' + esc(dir.name) + '\')">删除</div>' +
             '</div>' +
         '</span>' +
-        '<span class="dir-name' + (dir.type === 'guest' ? ' guest-upload' : '') + (dir.is_pinned ? ' pinned' : '') + '">' + escHtml(dir.name) + '</span>' +
+        '<span class="dir-name' + (dir.type === 'guest' ? ' guest-upload' : '') + (dir.is_pinned ? ' pinned' : '') + '">' + escHtml(dir.name) + (dir.has_password ? ' <span class="dir-lock-icon" title="已加密">🔒</span>' : '') + '</span>' +
         '<button class="add-file-inline-btn admin-only" onclick="openAddFileModal(' + dir.id + ')" title="添加文件">+ 添加文件</button>';
     return div;
 }
@@ -1676,16 +2001,19 @@ function createSubmenuEl(dir) {
         const links = (f.links || []).map((l, i) => typeof l === 'object' ? l : { url: l, name: '下载' + (i + 1) });
         const linksJson = JSON.stringify(links).replace(/"/g, '&quot;');
         const fileNameEscaped = escHtml(cleanName).replace(/"/g, '&quot;');
-        const linksHtml = links.length > 0 ? (
-            '<span class="file-download-wrap">' +
-                '<a class="file-download-btn" ' + (links.length === 1 ? 'href="' + escHtml(links[0].url) + '" target="_blank"' : 'href="javascript:void(0)" onclick="showDownloadChoice(\'' + linksJson.replace(/'/g, "\\'") + '\')"') + '>' +
-                    '⬇ 下载 ' + (links.length > 1 ? '(' + links.length + ')' : '') +
-                '</a>' +
-            '</span>'
-        ) : '';
+        const downloadSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+        const shareSvg = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>';
+        var downloadIcon = '';
+        if (links.length === 1) {
+            downloadIcon = '<a class="file-download-icon" href="' + escHtml(links[0].url) + '" target="_blank" title="下载 ' + escHtml(links[0].name || '') + '">' + downloadSvg + '</a>';
+        } else if (links.length > 1) {
+            downloadIcon = '<span class="file-download-icon" onclick="showDownloadChoice(\'' + linksJson.replace(/'/g, "\\'") + '\')" title="' + links.length + '个下载链接">' + downloadSvg + '</span>';
+        } else {
+            downloadIcon = '<a class="file-download-icon" href="api/index.php?action=file_download&dir_id=' + dir.id + '&file_name=' + encodeURIComponent(cleanName) + '" title="下载">' + downloadSvg + '</a>';
+        }
+        var shareBtn = '<span class="file-download-icon file-share-icon" onclick="event.stopPropagation();shareFile(' + dir.id + ', \'' + fileNameEscaped + '\')" title="分享">' + shareSvg + '</span>';
         return '<div class="submenu-item">' +
-            '<span class="file-name">📄 ' + escHtml(cleanName) + '</span>' +
-            linksHtml +
+            '<span class="file-name"><span class="file-name-text" data-dir-id="' + dir.id + '" data-filename="' + fileNameEscaped + '" data-links="' + linksJson + '">📄 ' + escHtml(cleanName) + '</span>' + shareBtn + downloadIcon + '</span>' +
             '<span class="file-actions admin-only">' +
                 '<button class="file-edit admin-only" data-dir-id="' + dir.id + '" data-filename="' + fileNameEscaped + '" data-links="' + linksJson + '">编辑</button>' +
                 '<button class="file-del admin-only" data-dir-id="' + dir.id + '" data-filename="' + fileNameEscaped + '">删除</button>' +
@@ -1701,6 +2029,12 @@ function attachDirListeners(container) {
     container.querySelectorAll('.dir-item:not([data-bound])').forEach(item => {
         item.setAttribute('data-bound', '1');
         item.addEventListener('click', function() {
+            var dirId = this.dataset.dirId;
+            var locked = this.dataset.locked === '1';
+            if (locked && !isLoggedIn && !isDirUnlocked(dirId)) {
+                showDirUnlockModal(dirId, this.dataset.dir);
+                return;
+            }
             const wrapper = this.nextElementSibling;
             if (wrapper && wrapper.classList.contains('submenu-wrapper')) {
                 wrapper.classList.toggle('show');
@@ -1895,6 +2229,156 @@ function confirmDeleteDir(id, name) {
     };
 }
 
+// 目录密码
+var _currentLockDirId = 0;
+var _currentUnlockDirId = 0;
+
+function showDirLockModal(id, name, hasPassword) {
+    _currentLockDirId = id;
+    document.getElementById('dir-lock-title').textContent = '🔒 ' + name;
+    document.getElementById('dir-lock-password').value = '';
+    document.getElementById('dir-lock-password').placeholder = hasPassword ? '输入新密码（留空则取消密码）' : '输入密码';
+    document.getElementById('dir-lock-modal').classList.add('show');
+    document.getElementById('dir-lock-password').focus();
+}
+
+function closeDirLockModal() {
+    document.getElementById('dir-lock-modal').classList.remove('show');
+    _currentLockDirId = 0;
+}
+
+async function saveDirLock() {
+    var password = document.getElementById('dir-lock-password').value;
+    try {
+        var res = await api('POST', '?action=dir_lock', { dir_id: _currentLockDirId, password: password });
+        if (!res.success) throw new Error(res.error);
+        closeDirLockModal();
+        loadData();
+    } catch (e) {
+        alert('操作失败: ' + e.message);
+    }
+}
+
+// sessionStorage 存储已解锁的目录 ID
+function getUnlockedDirs() {
+    try {
+        return JSON.parse(sessionStorage.getItem('unlocked_dirs') || '[]');
+    } catch(e) { return []; }
+}
+
+function isDirUnlocked(dirId) {
+    return getUnlockedDirs().indexOf(parseInt(dirId)) !== -1;
+}
+
+function setDirUnlocked(dirId) {
+    var dirs = getUnlockedDirs();
+    var id = parseInt(dirId);
+    if (dirs.indexOf(id) === -1) dirs.push(id);
+    sessionStorage.setItem('unlocked_dirs', JSON.stringify(dirs));
+}
+
+function showDirUnlockModal(dirId, dirName) {
+    _currentUnlockDirId = dirId;
+    document.getElementById('dir-unlock-title').textContent = '🔒 ' + dirName;
+    document.getElementById('dir-unlock-password').value = '';
+    document.getElementById('dir-unlock-modal').classList.add('show');
+    setTimeout(function() { document.getElementById('dir-unlock-password').focus(); }, 100);
+}
+
+function closeDirUnlockModal() {
+    document.getElementById('dir-unlock-modal').classList.remove('show');
+    _currentUnlockDirId = 0;
+}
+
+async function submitDirUnlock() {
+    var password = document.getElementById('dir-unlock-password').value;
+    if (!password) { alert('请输入密码'); return; }
+    try {
+        var res = await api('POST', '?action=dir_unlock', { dir_id: _currentUnlockDirId, password: password });
+        if (!res.success) throw new Error(res.error);
+        setDirUnlocked(_currentUnlockDirId);
+        closeDirUnlockModal();
+        // 展开目录
+        var item = document.querySelector('.dir-item[data-dir-id="' + _currentUnlockDirId + '"]');
+        if (item) {
+            var wrapper = item.nextElementSibling;
+            if (wrapper && wrapper.classList.contains('submenu-wrapper')) {
+                wrapper.classList.add('show');
+            }
+        }
+    } catch (e) {
+        alert('密码错误');
+    }
+}
+
+// 分享目录
+function shareDir(dirId, dirName) {
+    document.getElementById('share-dir-name').textContent = '目录：' + dirName;
+    document.getElementById('share-url').value = location.origin + location.pathname + '?dir=' + dirId;
+    document.getElementById('share-copied').style.display = 'none';
+    document.getElementById('share-modal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+
+// 分享文件
+async function shareFile(dirId, fileName) {
+    document.getElementById('share-dir-name').textContent = '文件：' + fileName;
+    document.getElementById('share-url').value = '正在生成短链接...';
+    document.getElementById('share-copied').style.display = 'none';
+    document.getElementById('share-modal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+    try {
+        var res = await api('POST', '?action=share_create', { dir_id: dirId, file_name: fileName });
+        if (res.success && res.code) {
+            document.getElementById('share-url').value = location.origin + '/' + res.code;
+        }
+    } catch(e) {
+        // 降级：长链接
+        document.getElementById('share-url').value = location.origin + '/share.php?dir_id=' + dirId + '&file_name=' + encodeURIComponent(fileName);
+    }
+}
+
+function closeShareModal() {
+    document.getElementById('share-modal').classList.remove('show');
+    document.body.style.overflow = '';
+}
+
+function copyShareUrl() {
+    var input = document.getElementById('share-url');
+    input.select();
+    document.execCommand('copy');
+    // 现代浏览器的 clipboard API
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(input.value).catch(function(){});
+    }
+    document.getElementById('share-copied').style.display = 'block';
+    setTimeout(function() {
+        document.getElementById('share-copied').style.display = 'none';
+    }, 2000);
+}
+
+// 页面加载时处理 ?dir=ID 参数，自动展开目录
+function handleShareUrl() {
+    var m = location.search.match(/[?&]dir=(\d+)/);
+    if (!m) return;
+    var dirId = parseInt(m[1]);
+    setTimeout(function() {
+        var item = document.querySelector('.dir-item[data-dir-id="' + dirId + '"]');
+        if (item) {
+            // 检查是否加密
+            if (item.dataset.locked === '1' && !isLoggedIn && !isDirUnlocked(dirId)) {
+                showDirUnlockModal(dirId, item.dataset.dir);
+                return;
+            }
+            item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            var wrapper = item.nextElementSibling;
+            if (wrapper && wrapper.classList.contains('submenu-wrapper')) {
+                wrapper.classList.add('show');
+            }
+        }
+    }, 500);
+}
+
 // File CRUD
 let fileLinkCount = 0;
 let uploadedFiles = []; // 存储已上传的文件信息
@@ -1994,19 +2478,19 @@ async function uploadFile(file) {
                         uploadIcon.textContent = '📁';
                     } else {
                         // 上传失败，恢复默认状态
-                        uploadText.innerHTML = '点击选择文件或拖拽文件到此处上传<small>支持常见文件格式，单个文件不超过50MB</small>';
+                        uploadText.innerHTML = '点击选择文件或拖拽文件到此处上传<small>支持常见文件格式，单个文件不超过1024MB</small>';
                         uploadIcon.textContent = '📤';
                         alert('上传失败: ' + (res.error || '未知错误'));
                     }
                 } catch (e) {
                     // 解析失败，恢复默认状态
-                    uploadText.innerHTML = '点击选择文件或拖拽文件到此处上传<small>支持常见文件格式，单个文件不超过50MB</small>';
+                    uploadText.innerHTML = '点击选择文件或拖拽文件到此处上传<small>支持常见文件格式，单个文件不超过1024MB</small>';
                     uploadIcon.textContent = '📤';
                     alert('上传失败: 响应解析错误');
                 }
             } else {
                 // HTTP错误，恢复默认状态
-                uploadText.innerHTML = '点击选择文件或拖拽文件到此处上传<small>支持常见文件格式，单个文件不超过50MB</small>';
+                uploadText.innerHTML = '点击选择文件或拖拽文件到此处上传<small>支持常见文件格式，单个文件不超过1024MB</small>';
                 uploadIcon.textContent = '📤';
                 alert('上传失败: HTTP ' + xhr.status);
             }
@@ -2016,7 +2500,7 @@ async function uploadFile(file) {
             progress.style.display = 'none';
             progressFill.style.width = '0%';
             // 网络错误，恢复默认状态
-            uploadText.innerHTML = '点击选择文件或拖拽文件到此处上传<small>支持常见文件格式，单个文件不超过50MB</small>';
+            uploadText.innerHTML = '点击选择文件或拖拽文件到此处上传<small>支持常见文件格式，单个文件不超过1024MB</small>';
             uploadIcon.textContent = '📤';
             alert('上传失败: 网络错误');
         };
@@ -2029,7 +2513,7 @@ async function uploadFile(file) {
         progress.style.display = 'none';
         progressFill.style.width = '0%';
         // 异常，恢复默认状态
-        uploadText.innerHTML = '点击选择文件或拖拽文件到此处上传<small>支持常见文件格式，单个文件不超过50MB</small>';
+        uploadText.innerHTML = '点击选择文件或拖拽文件到此处上传<small>支持常见文件格式，单个文件不超过1024MB</small>';
         uploadIcon.textContent = '📤';
         alert('上传失败: ' + e.message);
     }
@@ -2271,9 +2755,269 @@ function closeDownloadModal() {
 
 document.addEventListener('click', function(e) {
     if (e.target.classList.contains('modal-overlay')) {
-        e.target.classList.remove('show');
+        // 点击遮罩关闭弹窗，但不关闭预览弹窗（预览弹窗通过按钮关闭）
+        if (e.target.id !== 'preview-modal') {
+            e.target.classList.remove('show');
+        }
     }
 });
+
+// 文件名点击 → 预览
+document.addEventListener('click', function(e) {
+    var nameText = e.target.closest('.file-name-text');
+    if (!nameText) return;
+    e.preventDefault();
+    e.stopPropagation();
+    var dirId = nameText.dataset.dirId;
+    var fileName = cleanFileName(nameText.dataset.filename);
+    var linksJson = nameText.dataset.links;
+    previewFile(dirId, fileName, linksJson);
+});
+
+var _prevPreviewBodyOverflow = '';
+
+function getPreviewUrl(dirId, fileName, linksJson) {
+    return 'api/index.php?action=file_download&dir_id=' + dirId + '&file_name=' + encodeURIComponent(fileName) + '&inline=1';
+}
+
+function getFileExt(fileName) {
+    return fileName.replace(/^📄\s*/, '').split('.').pop().toLowerCase();
+}
+
+function isPreviewableImage(ext) {
+    return ['jpg','jpeg','png','gif','bmp','webp','svg','ico','apng','avif','tiff','tif','jpe','jfi','jif','jp2','j2k','jxr','wbmp'].indexOf(ext) !== -1;
+}
+
+function isPreviewableDoc(ext) {
+    return ext === 'pdf';
+}
+
+function isPreviewableText(ext) {
+    return ['html','htm','xhtml','xml','json','css','scss','sass','less','styl','js','jsx','ts','tsx','mjs','cjs','vue','svelte','astro','php','php3','php4','php5','php7','php8','phtml','pht','phar','ini','conf','env','sql','txt','log','csv','md','yml','yaml','jsonc','map'].indexOf(ext) !== -1;
+}
+
+function isPreviewableVideo(ext) {
+    return ['mp4','webm','ogg'].indexOf(ext) !== -1;
+}
+
+function isPreviewableAudio(ext) {
+    return ['mp3','wav','flac'].indexOf(ext) !== -1;
+}
+
+function isPreviewableArchive(ext) {
+    return ext === 'zip';
+}
+
+function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1048576).toFixed(1) + ' MB';
+}
+
+function previewFile(dirId, fileName, linksJson) {
+    var ext = getFileExt(fileName);
+    var url = getPreviewUrl(dirId, fileName, linksJson);
+    var dlUrl = url.replace('&inline=1', '');
+    var title = fileName.replace(/^📄\s*/, '');
+    document.getElementById('preview-title').textContent = '📄 ' + title;
+    var content = document.getElementById('preview-content');
+    document.getElementById('preview-modal').classList.add('show');
+    _prevPreviewBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    if (isPreviewableImage(ext)) {
+        content.innerHTML = '<img src="' + escHtml(url) + '" alt="' + escHtml(title) + '" style="max-width:100%;max-height:70vh;object-fit:contain;display:block;">';
+        var img = content.querySelector('img');
+        img.onerror = function() {
+            content.innerHTML = '<div class="preview-unsupported">图片加载失败<p style="margin-top:8px;font-size:12px;color:#aaa;">文件可能不存在或格式不受支持</p><p><a class="preview-download-btn" href="' + escHtml(dlUrl) + '">下载查看</a></p></div>';
+        };
+    } else if (isPreviewableDoc(ext)) {
+        content.innerHTML = '<iframe src="' + escHtml(url) + '" style="width:100%;height:70vh;border:none;background:#fff;"></iframe>';
+    } else if (isPreviewableVideo(ext)) {
+        content.innerHTML = '<video controls style="max-width:100%;max-height:70vh;display:block;"><source src="' + escHtml(url) + '"></video>';
+    } else if (isPreviewableAudio(ext)) {
+        var pid = 'ap' + Date.now();
+        content.innerHTML =
+            '<div class="audio-player" data-player="' + pid + '">' +
+                '<div class="audio-player-icon">🎵</div>' +
+                '<div class="audio-player-title">' + escHtml(title) + '</div>' +
+                '<div class="audio-player-controls">' +
+                    '<button class="ap-btn ap-btn-play" data-action="play" title="播放">▶</button>' +
+                    '<button class="ap-btn ap-btn-stop" data-action="stop" title="停止">■</button>' +
+                    '<div class="ap-progress-wrap"><input type="range" class="ap-range" value="0" min="0" max="1000" step="1"></div>' +
+                    '<span class="ap-time">00:00 / 00:00</span>' +
+                '</div>' +
+                '<audio class="ap-audio" src="' + escHtml(url) + '" preload="metadata"></audio>' +
+            '</div>';
+        initAudioPlayer(content.querySelector('.audio-player'));
+    } else if (isPreviewableText(ext)) {
+        content.innerHTML = '<div style="text-align:center;padding:30px;color:#888;">加载中...</div>';
+        fetch(url).then(function(r) { if (!r.ok) throw Error(); return r.text(); }).then(function(text) {
+            content.innerHTML = '<pre style="margin:0;padding:16px;background:#1e1e1e;color:#d4d4d4;font-size:12px;font-family:Menlo,Monaco,Consolas,monospace;white-space:pre-wrap;word-wrap:break-word;max-height:70vh;overflow:auto;border-radius:6px;line-height:1.6;"><code>' + escHtml(text) + '</code></pre>';
+        }).catch(function() {
+            content.innerHTML = '<div class="preview-unsupported">文件加载失败<p style="margin-top:8px;font-size:12px;color:#aaa;">文件可能不存在或过大</p><p><a class="preview-download-btn" href="' + escHtml(dlUrl) + '">下载查看</a></p></div>';
+        });
+    } else if (isPreviewableArchive(ext)) {
+        content.innerHTML = '<div style="text-align:center;padding:30px;color:#888;">正在解析压缩包...</div>';
+        fetch(url.replace('&inline=1', ''))
+            .then(function(r) { if (!r.ok) throw Error(); return r.arrayBuffer(); })
+            .then(function(buf) { return JSZip.loadAsync(buf); })
+            .then(function(zip) {
+                var tree = {};
+                zip.forEach(function(path, entry) {
+                    var parts = path.split('/');
+                    var node = tree;
+                    for (var i = 0; i < parts.length; i++) {
+                        var p = parts[i];
+                        if (!p) continue;
+                        if (!node[p]) node[p] = { _d: i < parts.length - 1 || entry.dir, _c: {} };
+                        if (i < parts.length - 1) node = node[p]._c;
+                    }
+                });
+
+                var currentPath = [];
+
+                function getNode(pathArr) {
+                    var node = tree;
+                    for (var i = 0; i < pathArr.length; i++) { node = node[pathArr[i]]._c; }
+                    return node;
+                }
+
+                function refresh() {
+                    var node = getNode(currentPath);
+                    document.getElementById('preview-title').textContent = '📦 ' + (currentPath.length > 0 ? currentPath[currentPath.length - 1] + '/' : title);
+                    var names = Object.keys(node).sort(function(a, b) {
+                        return node[a]._d === node[b]._d ? a.localeCompare(b) : (node[a]._d ? -1 : 1);
+                    });
+                    var html = '<div class="zip-file-list">';
+                    if (currentPath.length > 0) {
+                        html += '<div class="zip-file-item zip-file-back" data-action="up"><span class="zip-file-icon">↩</span><span class="zip-file-name">..</span></div>';
+                        html += '<div class="zip-breadcrumb"><span data-idx="0">根</span>';
+                        for (var i = 0; i < currentPath.length; i++) {
+                            html += '<span class="zip-breadcrumb-sep">/</span><span data-idx="' + (i + 1) + '">' + escHtml(currentPath[i]) + '</span>';
+                        }
+                        html += '</div>';
+                    }
+                    html += '<div class="zip-file-count" style="text-align:left;padding-left:12px;">' + names.length + ' 项</div>';
+                    names.forEach(function(name) {
+                        var e = node[name];
+                        html += '<div class="zip-file-item' + (e._d ? ' is-dir' : '') + '"' + (e._d ? ' data-dir="' + escHtml(name) + '"' : '') + '><span class="zip-file-icon">' + (e._d ? '📁' : '📄') + '</span><span class="zip-file-name">' + escHtml(name) + '</span></div>';
+                    });
+                    html += '</div>';
+                    content.innerHTML = html;
+
+                    content.querySelectorAll('[data-dir]').forEach(function(el) {
+                        el.addEventListener('click', function() { currentPath.push(this.dataset.dir); refresh(); });
+                    });
+                    var backBtn = content.querySelector('[data-action="up"]');
+                    if (backBtn) backBtn.addEventListener('click', function() { currentPath.pop(); refresh(); });
+                    content.querySelectorAll('.zip-breadcrumb span[data-idx]').forEach(function(el) {
+                        el.addEventListener('click', function() { currentPath = currentPath.slice(0, parseInt(this.dataset.idx)); refresh(); });
+                    });
+                }
+
+                refresh();
+            }).catch(function() {
+                content.innerHTML = '<div class="preview-unsupported">压缩包解析失败<p style="margin-top:8px;font-size:12px;color:#aaa;">文件可能损坏或格式不兼容</p><p><a class="preview-download-btn" href="' + escHtml(dlUrl) + '">下载查看</a></p></div>';
+            });
+    } else {
+        content.innerHTML = '<div class="preview-unsupported">不支持 .' + ext + ' 格式在线预览<p style="margin-top:8px;font-size:12px;color:#aaa;">请下载后使用对应软件查看</p><p><a class="preview-download-btn" href="' + escHtml(dlUrl) + '">下载文件</a></p></div>';
+    }
+}
+
+function closePreviewModal() {
+    // 停止正在播放的音频
+    var playing = document.querySelector('.audio-player.playing');
+    if (playing) { var a = playing.querySelector('audio'); if (a) { a.pause(); a.currentTime = 0; } }
+    document.getElementById('preview-modal').classList.remove('show');
+    document.body.style.overflow = _prevPreviewBodyOverflow;
+    document.getElementById('preview-content').innerHTML = '';
+}
+
+function formatTime(sec) {
+    var m = Math.floor(sec / 60);
+    var s = Math.floor(sec % 60);
+    return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+}
+
+function initAudioPlayer(player) {
+    var audio = player.querySelector('audio');
+    var playBtn = player.querySelector('[data-action="play"]');
+    var stopBtn = player.querySelector('[data-action="stop"]');
+    var range = player.querySelector('.ap-range');
+    var timeDisplay = player.querySelector('.ap-time');
+    var ignoreTimeUpdate = false;
+
+    function updateProgress() {
+        if (ignoreTimeUpdate) return;
+        if (audio.duration && isFinite(audio.duration)) {
+            var val = (audio.currentTime / audio.duration) * 1000;
+            range.value = Math.round(val);
+            var pct = (audio.currentTime / audio.duration) * 100;
+            range.style.background = 'linear-gradient(to right, #4a9eff 0%, #4a9eff ' + pct + '%, rgba(255,255,255,0.15) ' + pct + '%, rgba(255,255,255,0.15) 100%)';
+        }
+        timeDisplay.textContent = formatTime(audio.currentTime) + ' / ' + (audio.duration && isFinite(audio.duration) ? formatTime(audio.duration) : '00:00');
+    }
+
+    range.addEventListener('input', function() {
+        if (!audio.duration || !isFinite(audio.duration)) return;
+        audio.currentTime = (range.value / 1000) * audio.duration;
+        ignoreTimeUpdate = true;
+    });
+
+    // seeked 事件在 audio 跳转完成后触发，之后恢复 timeupdate 同步
+    audio.addEventListener('seeked', function() {
+        ignoreTimeUpdate = false;
+    });
+
+    playBtn.addEventListener('click', function() {
+        if (audio.paused) {
+            audio.play();
+            playBtn.textContent = '⏸';
+            playBtn.title = '暂停';
+            player.classList.add('playing');
+        } else {
+            audio.pause();
+            playBtn.textContent = '▶';
+            playBtn.title = '播放';
+            player.classList.remove('playing');
+        }
+    });
+
+    stopBtn.addEventListener('click', function() {
+        audio.pause();
+        audio.currentTime = 0;
+        range.value = 0;
+        playBtn.textContent = '▶';
+        playBtn.title = '播放';
+        player.classList.remove('playing');
+        if (audio.duration && isFinite(audio.duration)) {
+            timeDisplay.textContent = '00:00 / ' + formatTime(audio.duration);
+        }
+    });
+
+    audio.addEventListener('timeupdate', updateProgress);
+
+    audio.addEventListener('loadedmetadata', function() {
+        range.max = 1000;
+        timeDisplay.textContent = '00:00 / ' + formatTime(audio.duration);
+    });
+
+    audio.addEventListener('ended', function() {
+        playBtn.textContent = '▶';
+        playBtn.title = '播放';
+        player.classList.remove('playing');
+        audio.currentTime = 0;
+        range.value = 0;
+        if (audio.duration && isFinite(audio.duration)) {
+            timeDisplay.textContent = '00:00 / ' + formatTime(audio.duration);
+        }
+    });
+
+    audio.addEventListener('error', function() {
+        player.innerHTML = '<div class="preview-unsupported" style="color:#ccc;">音频加载失败<p style="margin-top:8px;font-size:12px;color:rgba(255,255,255,0.5);">文件可能不存在或格式不受支持</p></div>';
+    });
+}
 
 function confirmAction() {
     if (currentConfirmCallback) {
@@ -2317,17 +3061,11 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
     });
 });
 
-// Close download popup on outside click
-document.addEventListener('click', function(e) {
-    document.querySelectorAll('.download-popup.show').forEach(p => {
-        if (p.dataset.hover === '0') p.classList.remove('show');
-    });
-});
-
 // Init
 async function init() {
     await checkLogin();
     await loadData();
+    handleShareUrl();
 }
 init();
 </script>
