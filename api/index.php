@@ -989,8 +989,14 @@ if ($method === 'POST') {
         if ($answer === null || (string)$answer !== $captcha) {
             json(['success' => false, 'error' => '验证码错误，请刷新重试']);
         }
-        unset($_SESSION[$captchaKey]); // 一次性使用
+        unset($_SESSION[$captchaKey]);
+        // IP 限制：每天最多 2 条分享留言
         $ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '0.0.0.0';
+        $stmt = $db->prepare("SELECT COUNT(*) FROM messages WHERE ip = ? AND code LIKE 'SH-%' AND DATE(created_at) = CURDATE()");
+        $stmt->execute([$ip]);
+        if ((int)$stmt->fetchColumn() >= 2) {
+            json(['success' => false, 'error' => '今日留言次数已达上限（2次），请明天再试']);
+        }
         $code = 'SH-' . $shareCode . '-' . strtoupper(bin2hex(random_bytes(4)));
         $db->prepare("INSERT INTO messages (code, content, name, ip) VALUES (?, ?, ?, ?)")->execute([$code, $content, $name, $ip]);
         json(['success' => true, 'message' => '留言成功']);
