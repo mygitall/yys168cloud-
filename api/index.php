@@ -976,6 +976,22 @@ if ($method === 'POST') {
         json(['success' => true]);
     }
 
+    if ($action === 'share_delete') {
+        if (!isLoggedIn()) json(['success' => false, 'error' => '请先登录', 'unauthorized' => true]);
+        $db = createDb();
+        $code = isset($input['code']) ? $input['code'] : '';
+        if (empty($code) || !preg_match('/^[a-z]{8}$/', $code)) json(['success' => false, 'error' => '参数错误']);
+        $db->prepare("DELETE FROM share_links WHERE code = ?")->execute([$code]);
+        json(['success' => true]);
+    }
+
+    if ($action === 'share_clear') {
+        if (!isLoggedIn()) json(['success' => false, 'error' => '请先登录', 'unauthorized' => true]);
+        $db = createDb();
+        $db->exec("DELETE FROM share_links");
+        json(['success' => true]);
+    }
+
     json(['success' => false, 'error' => '未知的操作']);
 }
 

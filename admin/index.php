@@ -1103,6 +1103,7 @@ $csrfToken = isset($_SESSION['csrf_token']) ? $_SESSION['csrf_token'] : '';
                 <div class="section-card-header">
                     <h2>🔗 分享列表</h2>
                     <span style="font-size:12px;color:#888;">所有已生成的文件分享短链接</span>
+                    <button class="btn btn-sm btn-danger" onclick="clearAllShares()" style="margin-left:auto;">清空全部</button>
                 </div>
                 <div class="table-wrap" id="share-list-table" style="max-height:60vh;overflow:auto;">
                     <table>
@@ -1439,7 +1440,7 @@ function loadShareList() {
                     '<td style="text-align:center;">' + (parseInt(item.visit_count) || 0) + '</td>' +
                     '<td style="text-align:center;">' + (parseInt(item.download_count) || 0) + '</td>' +
                     '<td style="font-size:12px;color:#888;">' + (item.created_at || '-') + '</td>' +
-                    '<td><button class="btn btn-sm btn-outline" onclick="copyShareCode(\'' + item.code + '\')">复制链接</button></td>' +
+                    '<td><button class="btn btn-sm btn-outline" onclick="copyShareCode(\'' + item.code + '\')">复制</button> <button class="btn btn-sm btn-outline" style="border-color:#c33;color:#c33;" onclick="deleteShare(\'' + item.code + '\')">取消</button></td>' +
                 '</tr>';
             });
             tbody.innerHTML = html;
@@ -1457,6 +1458,34 @@ function copyShareCode(code) {
         ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
         toast('已复制');
     }
+}
+
+function deleteShare(code) {
+    if (!confirm('确定要取消该分享链接吗？')) return;
+    fetch(apiBase + '?action=share_delete', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        credentials: 'same-origin',
+        body: JSON.stringify({code: code})
+    }).then(function(r) { return r.json(); })
+    .then(function(d) {
+        if (d.success) { toast('已取消'); loadShareList(); }
+        else { toast('操作失败: ' + (d.error || '')); }
+    });
+}
+
+function clearAllShares() {
+    if (!confirm('确定要清空所有分享链接吗？此操作不可恢复！')) return;
+    fetch(apiBase + '?action=share_clear', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        credentials: 'same-origin',
+        body: JSON.stringify({})
+    }).then(function(r) { return r.json(); })
+    .then(function(d) {
+        if (d.success) { toast('已清空'); loadShareList(); }
+        else { toast('操作失败: ' + (d.error || '')); }
+    });
 }
 
 // ---- Directories ----
