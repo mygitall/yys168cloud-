@@ -180,6 +180,46 @@ if ($file && empty($file['links']) && $dlToken) {
             <p style="font-size:15px;font-weight:500;">此文件已被取消分享</p>
             <p style="margin-top:8px;font-size:12px;color:#999;">该分享链接已失效，请联系分享者重新获取</p>
         </div>
+        <div class="card-body" style="border-top:1px solid #f0f0ee;">
+            <p style="font-size:13px;color:#555;margin-bottom:12px;text-align:center;">💬 给管理员留言</p>
+            <form method="post" onsubmit="return submitShareMsg(event)" style="display:flex;flex-direction:column;gap:8px;">
+                <input type="text" name="msg_name" placeholder="你的称呼（选填）" style="padding:8px;border:1px solid #ccc;border-radius:4px;font-size:13px;">
+                <textarea name="msg_content" rows="3" placeholder="留言内容" required style="padding:8px;border:1px solid #ccc;border-radius:4px;font-size:13px;resize:vertical;"></textarea>
+                <button type="submit" class="lock-btn" style="margin:0;">发送留言</button>
+            </form>
+            <p id="share-msg-result" style="text-align:center;font-size:12px;margin-top:8px;"></p>
+        </div>
+        <script>
+        function submitShareMsg(e) {
+            e.preventDefault();
+            var form = e.target;
+            var btn = form.querySelector('button');
+            btn.disabled = true; btn.textContent = '发送中...';
+            var result = document.getElementById('share-msg-result');
+            fetch('api/index.php?action=share_message_create', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    share_code: '<?php echo isset($code) ? $code : ''; ?>',
+                    name: form.msg_name.value,
+                    content: form.msg_content.value
+                })
+            }).then(function(r) { return r.json(); })
+            .then(function(d) {
+                if (d.success) {
+                    result.innerHTML = '<span style="color:#4a9eff;">✅ ' + d.message + '</span>';
+                    form.reset();
+                } else {
+                    result.innerHTML = '<span style="color:#c33;">发送失败: ' + (d.error || '') + '</span>';
+                }
+                btn.disabled = false; btn.textContent = '发送留言';
+            }).catch(function() {
+                result.innerHTML = '<span style="color:#c33;">网络错误</span>';
+                btn.disabled = false; btn.textContent = '发送留言';
+            });
+            return false;
+        }
+        </script>
 
     <?php elseif ($error): ?>
         <div class="error-box">

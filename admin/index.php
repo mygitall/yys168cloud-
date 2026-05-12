@@ -973,6 +973,30 @@ $csrfToken = isset($_SESSION['csrf_token']) ? $_SESSION['csrf_token'] : '';
                     </table>
                 </div>
             </div>
+
+            <!-- 分享页留言 -->
+            <div class="section-card" style="margin-top:16px;">
+                <div class="section-card-header">
+                    <h2>💬 分享页留言</h2>
+                    <span style="font-size:12px;color:#888;">访问者在已取消分享页面提交的留言</span>
+                </div>
+                <div class="table-wrap" style="max-height:50vh;overflow:auto;">
+                    <table id="share-msg-table">
+                        <thead>
+                            <tr>
+                                <th>称呼</th>
+                                <th>留言内容</th>
+                                <th>分享码</th>
+                                <th>时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="share-msg-tbody">
+                            <tr><td colspan="5" class="empty-state">加载中...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
 
         <!-- Tab: 数据库管理 -->
@@ -1639,26 +1663,52 @@ function loadMsgs() {
         credentials: 'same-origin'
     }).then(function(r){ return r.json(); })
     .then(function(res){
-        var msgs = res.data || [];
+        var all = res.data || [];
+        // 分离分享留言（code 以 SH- 开头）和普通留言
+        var normal = all.filter(function(m) { return !m.code || m.code.indexOf('SH-') !== 0; });
+        var shareMsgs = all.filter(function(m) { return m.code && m.code.indexOf('SH-') === 0; });
+
+        // 普通留言表
         var tb = document.getElementById('msg-tbody');
-        document.getElementById('tab-badge-msgs').textContent = msgs.length;
-        if (!msgs || msgs.length === 0) {
+        document.getElementById('tab-badge-msgs').textContent = normal.length;
+        if (!normal || normal.length === 0) {
             tb.innerHTML = '<tr><td colspan="5" class="empty-state">暂无留言</td></tr>';
-            return;
+        } else {
+            tb.innerHTML = normal.map(function(m) {
+                var created = m.created_at ? m.created_at.substring(0, 16) : '-';
+                return '<tr>' +
+                    '<td style="font-family:monospace">' + escHtml(m.code) + '</td>' +
+                    '<td class="msg-content">' + escHtml(m.content || '') + '</td>' +
+                    '<td style="font-size:12px;color:#999">' + escHtml(m.ip || '-') + '</td>' +
+                    '<td style="white-space:nowrap;color:#999;font-size:12px">' + escHtml(created) + '</td>' +
+                    '<td class="td-actions">' +
+                        '<button class="btn btn-sm" onclick="openMsgModal(' + m.id + ')">编辑</button>' +
+                        '<button class="btn btn-sm btn-danger" onclick="delMsg(' + m.id + ')">删除</button>' +
+                    '</td>' +
+                '</tr>';
+            }).join('');
         }
-        tb.innerHTML = msgs.map(function(m) {
-            var created = m.created_at ? m.created_at.substring(0, 16) : '-';
-            return '<tr>' +
-                '<td style="font-family:monospace">' + escHtml(m.code) + '</td>' +
-                '<td class="msg-content">' + escHtml(m.content || '') + '</td>' +
-                '<td style="font-size:12px;color:#999">' + escHtml(m.ip || '-') + '</td>' +
-                '<td style="white-space:nowrap;color:#999;font-size:12px">' + escHtml(created) + '</td>' +
-                '<td class="td-actions">' +
-                    '<button class="btn btn-sm" onclick="openMsgModal(' + m.id + ')">编辑</button>' +
-                    '<button class="btn btn-sm btn-danger" onclick="delMsg(' + m.id + ')">删除</button>' +
-                '</td>' +
-            '</tr>';
-        }).join('');
+
+        // 分享留言表
+        var stb = document.getElementById('share-msg-tbody');
+        if (!shareMsgs || shareMsgs.length === 0) {
+            stb.innerHTML = '<tr><td colspan="5" class="empty-state">暂无分享页留言</td></tr>';
+        } else {
+            stb.innerHTML = shareMsgs.map(function(m) {
+                var created = m.created_at ? m.created_at.substring(0, 16) : '-';
+                // 从 code 中提取分享码：SH-xxxxxxxx-XXXX → xxxxxxxx
+                var shareCode = m.code ? m.code.replace(/^SH-([a-z]{8})-.*$/i, '$1') : '-';
+                return '<tr>' +
+                    '<td>' + escHtml(m.name || '匿名') + '</td>' +
+                    '<td class="msg-content">' + escHtml(m.content || '') + '</td>' +
+                    '<td style="font-family:monospace;font-size:12px;">' + escHtml(shareCode) + '</td>' +
+                    '<td style="white-space:nowrap;color:#999;font-size:12px">' + escHtml(created) + '</td>' +
+                    '<td class="td-actions">' +
+                        '<button class="btn btn-sm btn-danger" onclick="delMsg(' + m.id + ')">删除</button>' +
+                    '</td>' +
+                '</tr>';
+            }).join('');
+        }
     });
 }
 

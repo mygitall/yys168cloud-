@@ -153,7 +153,7 @@ function requireCsrf() {
 // ===================== CSRF PROTECTION =====================
 // State-changing methods require a valid CSRF token (except login/logout/check)
 if (in_array($method, ['POST', 'PUT', 'DELETE'])) {
-    $exemptActions = ['login', 'logout', 'check', 'dir_unlock', 'share_create', 'share_download'];
+    $exemptActions = ['login', 'logout', 'check', 'dir_unlock', 'share_create', 'share_download', 'share_message_create'];
     $csrfAction = isset($_GET['action']) ? $_GET['action'] : (isset($_GET['db_action']) ? $_GET['db_action'] : '');
     if (!in_array($csrfAction, $exemptActions)) {
         requireCsrf();
@@ -974,6 +974,18 @@ if ($method === 'POST') {
             $db->prepare("UPDATE share_links SET download_count = download_count + 1 WHERE code = ?")->execute([$code]);
         }
         json(['success' => true]);
+    }
+
+    if ($action === 'share_message_create') {
+        $db = createDb();
+        $shareCode = isset($input['share_code']) ? $input['share_code'] : '';
+        $name = trim(isset($input['name']) ? $input['name'] : '');
+        $content = trim(isset($input['content']) ? $input['content'] : '');
+        if (empty($shareCode) || empty($content)) json(['success' => false, 'error' => '参数错误']);
+        $ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '0.0.0.0';
+        $code = 'SH-' . $shareCode . '-' . strtoupper(bin2hex(random_bytes(4)));
+        $db->prepare("INSERT INTO messages (code, content, name, ip) VALUES (?, ?, ?, ?)")->execute([$code, $content, $name, $ip]);
+        json(['success' => true, 'message' => '留言成功']);
     }
 
     if ($action === 'share_delete') {
