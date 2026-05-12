@@ -60,18 +60,26 @@ if ($dirId <= 0 || empty($fileName)) {
     }
 }
 
-// 生成/更新下载 token（每次访问分享页刷新），隐藏真实文件路径
-$dlToken = '';
-$downloadUrl = '';
+// 生成下载 URL 列表
+$downloadUrls = [];
 if ($file && !empty($file['links'])) {
-    $downloadUrl = $file['links'][0]['url'];
+    foreach ($file['links'] as $link) {
+        $linkUrl = is_array($link) ? $link['url'] : $link;
+        $linkName = is_array($link) ? (isset($link['name']) ? $link['name'] : '下载') : '下载';
+        $downloadUrls[] = ['url' => $linkUrl, 'name' => $linkName];
+    }
 } else if ($file) {
     $dlToken = bin2hex(random_bytes(16));
     try {
         $stmt = $db->prepare("UPDATE share_links SET dl_token = ? WHERE code = ? AND dir_id = ? AND file_name = ?");
         $stmt->execute([$dlToken, $code, $dirId, $fileName]);
     } catch (Exception $e) {}
-    $downloadUrl = 'api/index.php?action=file_download&share=' . $code . '&dl=' . $dlToken;
+    $downloadUrls[] = ['url' => 'api/index.php?action=file_download&share=' . $code . '&dl=' . $dlToken, 'name' => '下载文件'];
+}
+
+$previewUrl = !empty($downloadUrls) ? $downloadUrls[0]['url'] : '';
+if ($file && empty($file['links']) && $dlToken) {
+    $previewUrl .= '&inline=1';
 }
 
 $displayName = $fileName;
@@ -83,10 +91,6 @@ $isImage = in_array($ext, $imgExts);
 $isVideo = in_array($ext, $videoExts);
 $isAudio = in_array($ext, $audioExts);
 
-$previewUrl = $downloadUrl;
-if ($file && empty($file['links']) && $dlToken) {
-    $previewUrl .= '&inline=1';
-}
 ?>
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -287,11 +291,14 @@ if ($file && empty($file['links']) && $dlToken) {
             </div>
         </div>
 
-        <div class="card-footer">
-            <a class="btn-download" href="<?php echo htmlspecialchars($downloadUrl); ?>" download>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                下载文件
+        <?php $multiDownload = count($downloadUrls) > 1; ?>
+        <div class="card-footer" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">
+            <?php foreach ($downloadUrls as $dl): ?>
+            <a class="btn-download" href="<?php echo htmlspecialchars($dl['url']); ?>" download style="<?php echo $multiDownload ? 'font-size:13px;padding:8px 18px;' : ''; ?>">
+                <svg width="<?php echo $multiDownload ? '16' : '20'; ?>" height="<?php echo $multiDownload ? '16' : '20'; ?>" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <?php echo htmlspecialchars($dl['name']); ?>
             </a>
+            <?php endforeach; ?>
         </div>
     <?php endif; ?>
 </div>
