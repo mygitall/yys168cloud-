@@ -181,9 +181,9 @@ if ($file && empty($file['links']) && $dlToken) {
             <p style="margin-top:8px;font-size:12px;color:#999;">该分享链接已失效，请联系分享者重新获取</p>
         </div>
         <?php
-        // 生成验证码
-        $a = rand(1, 9); $b = rand(1, 9);
-        $captchaAnswer = $a + $b;
+        // 生成简单文字验证码
+        $chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        $captchaAnswer = substr(str_shuffle($chars), 0, 4);
         $captchaKey = 'share_captcha_' . (isset($code) ? $code : '');
         $_SESSION[$captchaKey] = $captchaAnswer;
         ?>
@@ -193,8 +193,8 @@ if ($file && empty($file['links']) && $dlToken) {
                 <input type="text" name="msg_name" placeholder="你的称呼（选填）" style="padding:8px;border:1px solid #ccc;border-radius:4px;font-size:13px;">
                 <textarea name="msg_content" rows="3" placeholder="留言内容" required style="padding:8px;border:1px solid #ccc;border-radius:4px;font-size:13px;resize:vertical;"></textarea>
                 <div style="display:flex;align-items:center;gap:8px;">
-                    <span style="font-size:13px;white-space:nowrap;color:#555;">验证码：<?php echo $a; ?> + <?php echo $b; ?> = ?</span>
-                    <input type="text" name="msg_captcha" placeholder="输入结果" required style="width:80px;padding:8px;border:1px solid #ccc;border-radius:4px;font-size:13px;text-align:center;">
+                    <span style="font-size:14px;font-weight:700;letter-spacing:3px;color:#333;background:#f0f0ee;padding:4px 10px;border-radius:3px;user-select:none;"><?php echo $captchaAnswer; ?></span>
+                    <input type="text" name="msg_captcha" placeholder="请输入上方验证码" required style="flex:1;padding:8px;border:1px solid #ccc;border-radius:4px;font-size:13px;">
                 </div>
                 <button type="submit" class="lock-btn" style="margin:0;">发送留言</button>
             </form>
