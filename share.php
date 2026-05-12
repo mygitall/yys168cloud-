@@ -180,11 +180,22 @@ if ($file && empty($file['links']) && $dlToken) {
             <p style="font-size:15px;font-weight:500;">此文件已被取消分享</p>
             <p style="margin-top:8px;font-size:12px;color:#999;">该分享链接已失效，请联系分享者重新获取</p>
         </div>
+        <?php
+        // 生成验证码
+        $a = rand(1, 9); $b = rand(1, 9);
+        $captchaAnswer = $a + $b;
+        $captchaKey = 'share_captcha_' . (isset($code) ? $code : '');
+        $_SESSION[$captchaKey] = $captchaAnswer;
+        ?>
         <div class="card-body" style="border-top:1px solid #f0f0ee;">
             <p style="font-size:13px;color:#555;margin-bottom:12px;text-align:center;">💬 给管理员留言</p>
             <form method="post" onsubmit="return submitShareMsg(event)" style="display:flex;flex-direction:column;gap:8px;">
                 <input type="text" name="msg_name" placeholder="你的称呼（选填）" style="padding:8px;border:1px solid #ccc;border-radius:4px;font-size:13px;">
                 <textarea name="msg_content" rows="3" placeholder="留言内容" required style="padding:8px;border:1px solid #ccc;border-radius:4px;font-size:13px;resize:vertical;"></textarea>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="font-size:13px;white-space:nowrap;color:#555;">验证码：<?php echo $a; ?> + <?php echo $b; ?> = ?</span>
+                    <input type="text" name="msg_captcha" placeholder="输入结果" required style="width:80px;padding:8px;border:1px solid #ccc;border-radius:4px;font-size:13px;text-align:center;">
+                </div>
                 <button type="submit" class="lock-btn" style="margin:0;">发送留言</button>
             </form>
             <p id="share-msg-result" style="text-align:center;font-size:12px;margin-top:8px;"></p>
@@ -202,7 +213,8 @@ if ($file && empty($file['links']) && $dlToken) {
                 body: JSON.stringify({
                     share_code: '<?php echo isset($code) ? $code : ''; ?>',
                     name: form.msg_name.value,
-                    content: form.msg_content.value
+                    content: form.msg_content.value,
+                    captcha: form.msg_captcha.value
                 })
             }).then(function(r) { return r.json(); })
             .then(function(d) {
@@ -210,7 +222,7 @@ if ($file && empty($file['links']) && $dlToken) {
                     result.innerHTML = '<span style="color:#4a9eff;">✅ ' + d.message + '</span>';
                     form.reset();
                 } else {
-                    result.innerHTML = '<span style="color:#c33;">发送失败: ' + (d.error || '') + '</span>';
+                    result.innerHTML = '<span style="color:#c33;">' + (d.error || '发送失败') + '</span>';
                 }
                 btn.disabled = false; btn.textContent = '发送留言';
             }).catch(function() {

@@ -981,7 +981,15 @@ if ($method === 'POST') {
         $shareCode = isset($input['share_code']) ? $input['share_code'] : '';
         $name = trim(isset($input['name']) ? $input['name'] : '');
         $content = trim(isset($input['content']) ? $input['content'] : '');
+        $captcha = isset($input['captcha']) ? trim($input['captcha']) : '';
         if (empty($shareCode) || empty($content)) json(['success' => false, 'error' => '参数错误']);
+        // 验证码
+        $captchaKey = 'share_captcha_' . $shareCode;
+        $answer = isset($_SESSION[$captchaKey]) ? $_SESSION[$captchaKey] : null;
+        if ($answer === null || (string)$answer !== $captcha) {
+            json(['success' => false, 'error' => '验证码错误，请刷新重试']);
+        }
+        unset($_SESSION[$captchaKey]); // 一次性使用
         $ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '0.0.0.0';
         $code = 'SH-' . $shareCode . '-' . strtoupper(bin2hex(random_bytes(4)));
         $db->prepare("INSERT INTO messages (code, content, name, ip) VALUES (?, ?, ?, ?)")->execute([$code, $content, $name, $ip]);
